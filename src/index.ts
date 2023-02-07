@@ -1,0 +1,165 @@
+import { resolve } from 'path'
+import { readFileSync, writeFileSync } from 'fs'
+import type { Plugin, ViteDevServer } from 'vite'
+import { normalizePath } from 'vite'
+import picomatch from 'picomatch'
+import colors from 'picocolors'
+import SVGSpriter from 'svg-sprite'
+import FastGlob from 'fast-glob'
+
+interface Options {
+  /**
+   * Input directory
+   *
+   * @default 'src/assets/images/svg/*.svg'
+   */
+  icons?: string
+  /**
+   * Output directory
+   *
+   * @default 'src/public/images'
+   */
+  outputDir?: string
+
+  /**
+   * sprite-svg {@link https://github.com/svg-sprite/svg-sprite/blob/main/docs/configuration.md#sprite-svg-options|options}
+   */
+  sprite?: SVGSpriter.Config
+}
+
+const defaultOptions: Options = {
+  icons: 'src/assets/images/svg/*.svg',
+  outputDir: 'src/public/images',
+}
+
+const root = process.cwd()
+const isSvg = /\.svg$/
+
+function normalizePaths(root: string, path: string | undefined): string[] {
+  return (Array.isArray(path) ? path : [path])
+    .map(path => resolve(root, path))
+    .map(normalizePath)
+}
+
+const generateConfig = (options: Options) => ({
+  dest: normalizePath(resolve(root, <string>options.outputDir)),
+  mode: {
+    symbol: {
+      sprite: '../sprite.svg',
+    },
+  },
+  svg: {
+    xmlDeclaration: false,
+  },
+  shape: {
+    transform: [
+      {
+        svgo: {
+          plugins: [
+            { name: 'preset-default' },
+            {
+              name: 'removeAttrs',
+              params: {
+                attrs: ['*:(data-*|style|fill):*'],
+              },
+            },
+            {
+              name: 'addAttributesToSVGElement',
+              params: {
+                attributes: [
+                  { fill: 'currentColor' },
+                ],
+              },
+            },
+            'removeXMLNS',
+          ],
+        },
+      },
+    ],
+  },
+  ...options.sprite,
+})
+
+async function generateSvgSprite(pluginOptions: Options): Promise<string> {
+  if (!pluginOptions.icons || !pluginOptions.outputDir)
+    throw new Error('Options icon and outputDir should not be empty')
+
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-expect-error
+  const spriter = new SVGSpriter(generateConfig(pluginOptions))
+  const rootDir = pluginOptions.icons.replace(/(\/(\*+))+\.(.+)/g, '')
+  const entries = await FastGlob([pluginOptions.icons])
+
+  for (const entry of entries) {
+    if (isSvg.test(entry)) {
+      const relativePath = entry.replace(`${rootDir}/`, '')
+      spriter.add(
+        entry,
+        relativePath,
+        readFileSync(entry, { encoding: 'utf-8' }),
+      )
+    }
+  }
+
+  const { result } = await spriter.compileAsync()
+
+  writeFileSync(
+    result.symbol.sprite.path,
+    result.symbol.sprite.contents.toString('utf8'),
+  )
+
+  return result.symbol.sprite.path.replace(`${root}/`, '')
+}
+
+function ViteSvgSpriteWrapper(userOptions: Partial<Options> = {}): Plugin {
+  const pluginOptions: Options = { ...defaultOptions, ...userOptions }
+  let timer: number | undefined
+
+  function clear() {
+    clearTimeout(timer)
+  }
+  function schedule(fn: () => void) {
+    clear()
+    timer = setTimeout(fn, 200) as any as number
+  }
+
+  return {
+    name: 'vite-plugin-svg-sprite',
+    apply: 'serve',
+    config: () => ({ server: { watch: { disableGlobbing: false } } }),
+    configureServer({ watcher, ws, config: { logger } }: ViteDevServer) {
+      const iconsPath = normalizePaths(root, pluginOptions.icons)
+      const shouldReload = picomatch(iconsPath)
+      const checkReload = (path: string) => {
+        if (shouldReload(path)) {
+          schedule(() => {
+            generateSvgSprite(pluginOptions)
+              .then((res) => {
+                ws.send({ type: 'full-reload', path: '*' })
+                logger.info(
+                  `${colors.green('sprite changed')} ${colors.dim(res)}`,
+                  {
+                    clear: true,
+                    timestamp: true,
+                  },
+                )
+              })
+              .catch((err) => {
+                logger.info(
+                  `${colors.red('sprite error')} ${colors.dim(err)}`,
+                  { clear: true, timestamp: true },
+                )
+              })
+          })
+        }
+      }
+
+      watcher.add(iconsPath)
+      watcher.on('add', checkReload)
+      watcher.on('change', checkReload)
+      watcher.on('unlink', checkReload)
+    },
+  }
+}
+
+export default ViteSvgSpriteWrapper
