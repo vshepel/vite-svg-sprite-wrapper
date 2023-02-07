@@ -1,6 +1,7 @@
 {
   "name": "vite-svg-sprite-wrapper",
-  "version": "1.0.2",
+  "type": "module",
+  "version": "1.0.3",
   "packageManager": "pnpm@7.5.0",
   "description": "Creating one sprite file on the fly",
   "author": "vshepel <web.shepel@gmail.com>",
@@ -20,8 +21,8 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "require": "./dist/index.js",
-      "import": "./dist/index.mjs"
+      "require": "./dist/index.cjs",
+      "import": "./dist/index.js"
     }
   },
   "main": "dist/index.js",
@@ -31,7 +32,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --dts --format cjs,esm",
+    "build": "tsup src/index.ts --dts --format cjs,esm --clean",
     "dev": "pnpm run build --watch",
     "lint": "eslint .",
     "prepublishOnly": "pnpm run build",
@@ -41,6 +42,9 @@
     "vite": "^4.0.0"
   },
   "dependencies": {
+    "fast-glob": "^3.2.12",
+    "picocolors": "^1.0.0",
+    "picomatch": "^2.3.1",
     "svg-sprite": "^2.0.2"
   },
   "devDependencies": {
@@ -50,9 +54,6 @@
     "@types/svg-sprite": "^0.0.34",
     "bumpp": "^8.2.1",
     "eslint": "^8.29.0",
-    "fast-glob": "^3.2.12",
-    "picocolors": "^1.0.0",
-    "picomatch": "^2.3.1",
     "tsup": "^6.5.0",
     "typescript": "^4.9.4",
     "vite": "^4.0.1"
