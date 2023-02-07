@@ -47,11 +47,11 @@ export default defineConfig({
 
 Now, any changes to the .svg files in the `icons` folder will generate a `sprite.svg` in the `outputDir` folder.
 
-So you can use the icons somehow:
+So you can use the icons somehow ([Example](https://github.com/vshepel/vite-svg-sprite-wrapper/tree/master/example)):
 
 ```html
 <svg class="icon" aria-hidden="true">
-  <use xlink:href="/images/sprite.svg#awesome-icon"></use>
+  <use xlink:href="/images/sprite.svg#star"></use>
 </svg>
 ```
 
