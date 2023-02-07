@@ -1,0 +1,14 @@
+{
+  "name": "vite-svg-sprite-wrapper-example",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite --open"
+  },
+  "devDependencies": {
+    "typescript": "^4",
+    "vite": "^4",
+    "vite-svg-sprite-wrapper": "workspace:*"
+  }
+}

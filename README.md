@@ -1,6 +1,16 @@
-<h2 align='center'><samp>vite-svg-sprite-wrapper</samp></h2>
+# vite-svg-sprite-wrapper
 
-[svg-sprite](https://github.com/svg-sprite/svg-sprite/) wrapper for [Vite](https://github.com/vitejs/vite) 
+<p>
+  <a href="https://npmjs.com/package/vite"><img src="https://img.shields.io/npm/v/vite-svg-sprite-wrapper.svg" alt="npm package"></a>
+</p>
+
+> [svg-sprite](https://github.com/svg-sprite/svg-sprite/) wrapper for [Vite](https://github.com/vitejs/vite)
+
+## Install
+
+```
+npm i vite-svg-sprite-wrapper -D
+```
 
 ## Usage
 

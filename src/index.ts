@@ -1,13 +1,12 @@
 import { resolve } from 'path'
 import { readFileSync, writeFileSync } from 'fs'
-import type { Plugin, ViteDevServer } from 'vite'
-import { normalizePath } from 'vite'
+import { type PluginOption, type ViteDevServer, normalizePath } from 'vite'
 import picomatch from 'picomatch'
 import colors from 'picocolors'
 import SVGSpriter from 'svg-sprite'
 import FastGlob from 'fast-glob'
 
-interface Options {
+export interface Options {
   /**
    * Input directory
    *
@@ -27,11 +26,6 @@ interface Options {
   sprite?: SVGSpriter.Config
 }
 
-const defaultOptions: Options = {
-  icons: 'src/assets/images/svg/*.svg',
-  outputDir: 'src/public/images',
-}
-
 const root = process.cwd()
 const isSvg = /\.svg$/
 
@@ -41,8 +35,8 @@ function normalizePaths(root: string, path: string | undefined): string[] {
     .map(normalizePath)
 }
 
-const generateConfig = (options: Options) => ({
-  dest: normalizePath(resolve(root, <string>options.outputDir)),
+const generateConfig = (outputDir: string, options: Options) => ({
+  dest: normalizePath(resolve(root, outputDir)),
   mode: {
     symbol: {
       sprite: '../sprite.svg',
@@ -80,15 +74,12 @@ const generateConfig = (options: Options) => ({
   ...options.sprite,
 })
 
-async function generateSvgSprite(pluginOptions: Options): Promise<string> {
-  if (!pluginOptions.icons || !pluginOptions.outputDir)
-    throw new Error('Options icon and outputDir should not be empty')
-
+async function generateSvgSprite(icons: string, outputDir: string, options: Options): Promise<string> {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-expect-error
-  const spriter = new SVGSpriter(generateConfig(pluginOptions))
-  const rootDir = pluginOptions.icons.replace(/(\/(\*+))+\.(.+)/g, '')
-  const entries = await FastGlob([pluginOptions.icons])
+  const spriter = new SVGSpriter(generateConfig(outputDir, options))
+  const rootDir = icons.replace(/(\/(\*+))+\.(.+)/g, '')
+  const entries = await FastGlob([icons])
 
   for (const entry of entries) {
     if (isSvg.test(entry)) {
@@ -111,8 +102,11 @@ async function generateSvgSprite(pluginOptions: Options): Promise<string> {
   return result.symbol.sprite.path.replace(`${root}/`, '')
 }
 
-function ViteSvgSpriteWrapper(userOptions: Partial<Options> = {}): Plugin {
-  const pluginOptions: Options = { ...defaultOptions, ...userOptions }
+function ViteSvgSpriteWrapper(options: Options = {}): PluginOption {
+  const {
+    icons = 'src/assets/images/svg/*.svg',
+    outputDir = 'src/public/images',
+  } = options
   let timer: number | undefined
 
   function clear() {
@@ -128,12 +122,12 @@ function ViteSvgSpriteWrapper(userOptions: Partial<Options> = {}): Plugin {
     apply: 'serve',
     config: () => ({ server: { watch: { disableGlobbing: false } } }),
     configureServer({ watcher, ws, config: { logger } }: ViteDevServer) {
-      const iconsPath = normalizePaths(root, pluginOptions.icons)
+      const iconsPath = normalizePaths(root, icons)
       const shouldReload = picomatch(iconsPath)
       const checkReload = (path: string) => {
         if (shouldReload(path)) {
           schedule(() => {
-            generateSvgSprite(pluginOptions)
+            generateSvgSprite(icons, outputDir, options)
               .then((res) => {
                 ws.send({ type: 'full-reload', path: '*' })
                 logger.info(
