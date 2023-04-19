@@ -147,6 +147,27 @@ function ViteSvgSpriteWrapper(options: Options = {}): PluginOption {
     {
       name: 'vite-plugin-svg-sprite:serve',
       apply: 'serve',
+      configResolved(_config) {
+        config = _config
+      },
+      async buildStart() {
+        generateSvgSprite(icons, outputDir, options)
+          .then((res) => {
+            config.logger.info(
+              `${colors.green('sprite generated')} ${colors.dim(res)}`,
+              {
+                clear: true,
+                timestamp: true,
+              },
+            )
+          })
+          .catch((err) => {
+            config.logger.info(
+              `${colors.red('sprite error')} ${colors.dim(err)}`,
+              { clear: true, timestamp: true },
+            )
+          })
+      },
       config: () => ({ server: { watch: { disableGlobbing: false } } }),
       configureServer({ watcher, ws, config: { logger } }: ViteDevServer) {
         const iconsPath = normalizePaths(root, icons)
