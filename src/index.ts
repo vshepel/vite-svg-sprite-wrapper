@@ -1,6 +1,6 @@
 import { resolve } from 'path'
 import { readFileSync, writeFileSync } from 'fs'
-import { type PluginOption, type ViteDevServer, normalizePath } from 'vite'
+import { type PluginOption, type ViteDevServer, normalizePath, ResolvedConfig } from 'vite'
 import picomatch from 'picomatch'
 import colors from 'picocolors'
 import SVGSpriter from 'svg-sprite'
@@ -108,6 +108,7 @@ function ViteSvgSpriteWrapper(options: Options = {}): PluginOption {
     outputDir = 'src/public/images',
   } = options
   let timer: number | undefined
+  let config: ResolvedConfig
 
   function clear() {
     clearTimeout(timer)
@@ -117,43 +118,70 @@ function ViteSvgSpriteWrapper(options: Options = {}): PluginOption {
     timer = setTimeout(fn, 200) as any as number
   }
 
-  return {
-    name: 'vite-plugin-svg-sprite',
-    apply: 'serve',
-    config: () => ({ server: { watch: { disableGlobbing: false } } }),
-    configureServer({ watcher, ws, config: { logger } }: ViteDevServer) {
-      const iconsPath = normalizePaths(root, icons)
-      const shouldReload = picomatch(iconsPath)
-      const checkReload = (path: string) => {
-        if (shouldReload(path)) {
-          schedule(() => {
-            generateSvgSprite(icons, outputDir, options)
-              .then((res) => {
-                ws.send({ type: 'full-reload', path: '*' })
-                logger.info(
-                  `${colors.green('sprite changed')} ${colors.dim(res)}`,
-                  {
-                    clear: true,
-                    timestamp: true,
-                  },
-                )
-              })
-              .catch((err) => {
-                logger.info(
-                  `${colors.red('sprite error')} ${colors.dim(err)}`,
-                  { clear: true, timestamp: true },
-                )
-              })
+  return [
+    {
+      name: 'vite-plugin-svg-sprite:build',
+      apply: 'build',
+      configResolved(_config) {
+        config = _config
+      },
+      async writeBundle() {
+        generateSvgSprite(icons, outputDir, options)
+          .then((res) => {
+            config.logger.info(
+              `${colors.green('sprite generated')} ${colors.dim(res)}`,
+              {
+                clear: true,
+                timestamp: true,
+              },
+            )
           })
-        }
-      }
-
-      watcher.add(iconsPath)
-      watcher.on('add', checkReload)
-      watcher.on('change', checkReload)
-      watcher.on('unlink', checkReload)
+          .catch((err) => {
+            config.logger.info(
+              `${colors.red('sprite error')} ${colors.dim(err)}`,
+              { clear: true, timestamp: true },
+            )
+          })
+      },
     },
-  }
+    {
+      name: 'vite-plugin-svg-sprite:serve',
+      apply: 'serve',
+      config: () => ({ server: { watch: { disableGlobbing: false } } }),
+      configureServer({ watcher, ws, config: { logger } }: ViteDevServer) {
+        const iconsPath = normalizePaths(root, icons)
+        const shouldReload = picomatch(iconsPath)
+        const checkReload = (path: string) => {
+          if (shouldReload(path)) {
+            schedule(() => {
+              generateSvgSprite(icons, outputDir, options)
+                .then((res) => {
+                  ws.send({ type: 'full-reload', path: '*' })
+                  logger.info(
+                    `${colors.green('sprite changed')} ${colors.dim(res)}`,
+                    {
+                      clear: true,
+                      timestamp: true,
+                    },
+                  )
+                })
+                .catch((err) => {
+                  logger.info(
+                    `${colors.red('sprite error')} ${colors.dim(err)}`,
+                    { clear: true, timestamp: true },
+                  )
+                })
+            })
+          }
+        }
+
+        watcher.add(iconsPath)
+        watcher.on('add', checkReload)
+        watcher.on('change', checkReload)
+        watcher.on('unlink', checkReload)
+      },
+    },
+  ]
 }
 
 export default ViteSvgSpriteWrapper
