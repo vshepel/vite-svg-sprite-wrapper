@@ -1,6 +1,6 @@
 import { resolve } from 'path'
 import { readFileSync, writeFileSync } from 'fs'
-import { type PluginOption, type ViteDevServer, normalizePath, ResolvedConfig } from 'vite'
+import { type PluginOption, type ResolvedConfig, type ViteDevServer, normalizePath } from 'vite'
 import picomatch from 'picomatch'
 import colors from 'picocolors'
 import SVGSpriter from 'svg-sprite'
