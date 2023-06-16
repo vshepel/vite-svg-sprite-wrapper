@@ -1,5 +1,5 @@
-import { resolve } from 'path'
-import { readFileSync, writeFileSync } from 'fs'
+import { resolve } from 'node:path'
+import { readFileSync, writeFileSync } from 'node:fs'
 import { type PluginOption, type ResolvedConfig, type ViteDevServer, normalizePath } from 'vite'
 import picomatch from 'picomatch'
 import colors from 'picocolors'
@@ -35,44 +35,46 @@ function normalizePaths(root: string, path: string | undefined): string[] {
     .map(normalizePath)
 }
 
-const generateConfig = (outputDir: string, options: Options) => ({
-  dest: normalizePath(resolve(root, outputDir)),
-  mode: {
-    symbol: {
-      sprite: '../sprite.svg',
-    },
-  },
-  svg: {
-    xmlDeclaration: false,
-  },
-  shape: {
-    transform: [
-      {
-        svgo: {
-          plugins: [
-            { name: 'preset-default' },
-            {
-              name: 'removeAttrs',
-              params: {
-                attrs: ['*:(data-*|style|fill):*'],
-              },
-            },
-            {
-              name: 'addAttributesToSVGElement',
-              params: {
-                attributes: [
-                  { fill: 'currentColor' },
-                ],
-              },
-            },
-            'removeXMLNS',
-          ],
-        },
+function generateConfig(outputDir: string, options: Options) {
+  return {
+    dest: normalizePath(resolve(root, outputDir)),
+    mode: {
+      symbol: {
+        sprite: '../sprite.svg',
       },
-    ],
-  },
-  ...options.sprite,
-})
+    },
+    svg: {
+      xmlDeclaration: false,
+    },
+    shape: {
+      transform: [
+        {
+          svgo: {
+            plugins: [
+              { name: 'preset-default' },
+              {
+                name: 'removeAttrs',
+                params: {
+                  attrs: ['*:(data-*|style|fill):*'],
+                },
+              },
+              {
+                name: 'addAttributesToSVGElement',
+                params: {
+                  attributes: [
+                    { fill: 'currentColor' },
+                  ],
+                },
+              },
+              'removeXMLNS',
+            ],
+          },
+        },
+      ],
+    },
+    ...options.sprite,
+  }
+}
 
 async function generateSvgSprite(icons: string, outputDir: string, options: Options): Promise<string> {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
