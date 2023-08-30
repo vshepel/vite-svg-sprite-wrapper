@@ -120,6 +120,8 @@ function ViteSvgSpriteWrapper(options: Options = {}): PluginOption {
     timer = setTimeout(fn, 200) as any as number
   }
 
+  const formatConsole = (msg: string) => `${colors.cyan('[vite-plugin-svg-sprite]')} ${msg}`
+
   return [
     {
       name: 'vite-plugin-svg-sprite:build',
@@ -127,23 +129,17 @@ function ViteSvgSpriteWrapper(options: Options = {}): PluginOption {
       configResolved(_config) {
         config = _config
       },
-      async writeBundle() {
-        generateSvgSprite(icons, outputDir, options)
-          .then((res) => {
-            config.logger.info(
-              `${colors.green('sprite generated')} ${colors.dim(res)}`,
-              {
-                clear: true,
-                timestamp: true,
-              },
-            )
-          })
-          .catch((err) => {
-            config.logger.info(
-              `${colors.red('sprite error')} ${colors.dim(err)}`,
-              { clear: true, timestamp: true },
-            )
-          })
+      writeBundle: {
+        sequential: true,
+        async handler() {
+          generateSvgSprite(icons, outputDir, options)
+            .then((res) => {
+              config.logger.info(formatConsole(`Sprite generated ${colors.green(res)}`))
+            })
+            .catch((err) => {
+              config.logger.info(formatConsole(`${colors.red('Sprite error')} ${colors.dim(err as any)}`))
+            })
+        },
       },
     },
     {
@@ -152,23 +148,17 @@ function ViteSvgSpriteWrapper(options: Options = {}): PluginOption {
       configResolved(_config) {
         config = _config
       },
-      async buildStart() {
-        generateSvgSprite(icons, outputDir, options)
-          .then((res) => {
-            config.logger.info(
-              `${colors.green('sprite generated')} ${colors.dim(res)}`,
-              {
-                clear: true,
-                timestamp: true,
-              },
-            )
-          })
-          .catch((err) => {
-            config.logger.info(
-              `${colors.red('sprite error')} ${colors.dim(err)}`,
-              { clear: true, timestamp: true },
-            )
-          })
+      buildStart: {
+        sequential: true,
+        async handler() {
+          generateSvgSprite(icons, outputDir, options)
+            .then((res) => {
+              config.logger.info(formatConsole(`${colors.green('sprite generated')} ${colors.dim(res)}`))
+            })
+            .catch((err) => {
+              config.logger.info(formatConsole(`${colors.red('sprite error')} ${colors.dim(err)}`))
+            })
+        },
       },
       config: () => ({ server: { watch: { disableGlobbing: false } } }),
       configureServer({ watcher, ws, config: { logger } }: ViteDevServer) {
@@ -180,19 +170,10 @@ function ViteSvgSpriteWrapper(options: Options = {}): PluginOption {
               generateSvgSprite(icons, outputDir, options)
                 .then((res) => {
                   ws.send({ type: 'full-reload', path: '*' })
-                  logger.info(
-                    `${colors.green('sprite changed')} ${colors.dim(res)}`,
-                    {
-                      clear: true,
-                      timestamp: true,
-                    },
-                  )
+                  logger.info(formatConsole(`${colors.green('sprite changed')} ${colors.dim(res)}`))
                 })
                 .catch((err) => {
-                  logger.info(
-                    `${colors.red('sprite error')} ${colors.dim(err)}`,
-                    { clear: true, timestamp: true },
-                  )
+                  logger.info(formatConsole(`${colors.red('sprite error')} ${colors.dim(err)}`))
                 })
             })
           }
