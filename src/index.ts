@@ -38,6 +38,8 @@ export interface Options {
   }
 }
 
+type optionsWithDefault = Pick<Options, 'sprite' | 'types'> & Required<Omit<Options, 'sprite' | 'types'>>
+
 const root = process.cwd()
 const isSvg = /\.svg$/
 
@@ -84,7 +86,7 @@ function generateConfig(outputDir: string, spriteOptions: Options['sprite']) {
   }
 }
 
-async function generateSvgSprite({ sprite, outputDir, icons, types }: Options): Promise<string> {
+async function generateSvgSprite({ sprite, outputDir, icons, types }: optionsWithDefault): Promise<string> {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-expect-error
   const spriter = new SVGSpriter(generateConfig(outputDir, sprite))
@@ -115,10 +117,9 @@ async function generateSvgSprite({ sprite, outputDir, icons, types }: Options): 
 }
 
 function ViteSvgSpriteWrapper(optionsParam: Options = {}): PluginOption {
-  const options = {
+  const options: optionsWithDefault = {
     icons: 'src/assets/images/svg/*.svg',
     outputDir: 'src/public/images',
-    types: null,
     ...optionsParam,
   }
   let timer: number | undefined
@@ -177,7 +178,7 @@ function ViteSvgSpriteWrapper(optionsParam: Options = {}): PluginOption {
       },
       config: () => ({ server: { watch: { disableGlobbing: false } } }),
       configureServer({ watcher, ws, config: { logger } }: ViteDevServer) {
-        const iconsPath = normalizePaths(root, icons)
+        const iconsPath = normalizePaths(root, options.icons)
         const shouldReload = picomatch(iconsPath)
         const checkReload = (path: string) => {
           if (shouldReload(path)) {
