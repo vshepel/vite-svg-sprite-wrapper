@@ -94,7 +94,17 @@ async function generateSvgSprite(icons: string, outputDir: string, options: Opti
     }
   }
 
-  const { result } = await spriter.compileAsync()
+  const { result, data } = await spriter.compileAsync()
+
+  const shapeIds = data.mymode.shapes.map(({ base }) => {
+    return `'${base}'`
+  })
+  const typeString = `type SpriteName = ${shapeIds.join(' | ')}`
+
+  writeFileSync(
+    `${result.symbol.sprite.path}/../spriteType.ts`,
+    typeString,
+  )
 
   writeFileSync(
     result.symbol.sprite.path,
