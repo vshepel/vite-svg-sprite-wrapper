@@ -1,5 +1,6 @@
 import { resolve } from 'node:path'
 import { readFileSync, writeFileSync } from 'node:fs'
+import { cwd } from 'node:process'
 import { type PluginOption, type ResolvedConfig, type ViteDevServer, normalizePath } from 'vite'
 import picomatch from 'picomatch'
 import colors from 'picocolors'
@@ -26,7 +27,7 @@ export interface Options {
   sprite?: SVGSpriter.Config
 }
 
-const root = process.cwd()
+const root = cwd()
 const isSvg = /\.svg$/
 
 function normalizePaths(root: string, path: string | undefined): string[] {
@@ -121,6 +122,12 @@ function ViteSvgSpriteWrapper(options: Options = {}): PluginOption {
   }
 
   const formatConsole = (msg: string) => `${colors.cyan('[vite-plugin-svg-sprite]')} ${msg}`
+  const successGeneration = (res: string) => {
+    config.logger.info(formatConsole(`Sprite generated ${colors.green(res)}`))
+  }
+  const failGeneration = (err: any) => {
+    config.logger.info(formatConsole(`${colors.red('Sprite error')} ${colors.dim(err)}`))
+  }
 
   return [
     {
@@ -133,12 +140,8 @@ function ViteSvgSpriteWrapper(options: Options = {}): PluginOption {
         sequential: true,
         async handler() {
           generateSvgSprite(icons, outputDir, options)
-            .then((res) => {
-              config.logger.info(formatConsole(`Sprite generated ${colors.green(res)}`))
-            })
-            .catch((err) => {
-              config.logger.info(formatConsole(`${colors.red('Sprite error')} ${colors.dim(err as any)}`))
-            })
+            .then(successGeneration)
+            .catch(failGeneration)
         },
       },
     },
@@ -152,16 +155,12 @@ function ViteSvgSpriteWrapper(options: Options = {}): PluginOption {
         sequential: true,
         async handler() {
           generateSvgSprite(icons, outputDir, options)
-            .then((res) => {
-              config.logger.info(formatConsole(`${colors.green('sprite generated')} ${colors.dim(res)}`))
-            })
-            .catch((err) => {
-              config.logger.info(formatConsole(`${colors.red('sprite error')} ${colors.dim(err)}`))
-            })
+            .then(successGeneration)
+            .catch(failGeneration)
         },
       },
       config: () => ({ server: { watch: { disableGlobbing: false } } }),
-      configureServer({ watcher, ws, config: { logger } }: ViteDevServer) {
+      configureServer({ watcher, ws }: ViteDevServer) {
         const iconsPath = normalizePaths(root, icons)
         const shouldReload = picomatch(iconsPath)
         const checkReload = (path: string) => {
@@ -170,11 +169,9 @@ function ViteSvgSpriteWrapper(options: Options = {}): PluginOption {
               generateSvgSprite(icons, outputDir, options)
                 .then((res) => {
                   ws.send({ type: 'full-reload', path: '*' })
-                  logger.info(formatConsole(`${colors.green('sprite changed')} ${colors.dim(res)}`))
+                  successGeneration(res)
                 })
-                .catch((err) => {
-                  logger.info(formatConsole(`${colors.red('sprite error')} ${colors.dim(err)}`))
-                })
+                .catch(failGeneration)
             })
           }
         }
