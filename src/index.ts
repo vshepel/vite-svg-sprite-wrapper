@@ -136,8 +136,8 @@ function ViteSvgSpriteWrapper(options: Options = {}): PluginOption {
       configResolved(_config) {
         config = _config
       },
-      writeBundle: {
-        sequential: true,
+      enforce: 'pre',
+      buildStart: {
         async handler() {
           generateSvgSprite(icons, outputDir, options)
             .then(successGeneration)
@@ -151,8 +151,8 @@ function ViteSvgSpriteWrapper(options: Options = {}): PluginOption {
       configResolved(_config) {
         config = _config
       },
+      enforce: 'pre',
       buildStart: {
-        sequential: true,
         async handler() {
           generateSvgSprite(icons, outputDir, options)
             .then(successGeneration)
