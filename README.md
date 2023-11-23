@@ -40,6 +40,26 @@ export default defineConfig({
        * sprite-svg {@link https://github.com/svg-sprite/svg-sprite/blob/main/docs/configuration.md#sprite-svg-options|options}
        */
       sprite?: SVGSpriter.Config
+      /**
+       * Defines if a type should be generated
+       * @default false
+       */
+      generateType?: boolean
+      /**
+       * Name of the type to be used when generateType is set to true
+       * @default 'SvgIcons'
+       */
+      typeName?: string
+      /**
+       * File name of the generated type file
+       * @default 'svg-icons'
+       */
+      typeFileName?: string
+      /**
+       * Name of the output directory for generated type file
+       * @default '{@link icons} directory'
+       */
+      typeOutputDir?: string
     }),
   ],
 })
