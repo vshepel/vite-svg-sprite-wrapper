@@ -70,7 +70,7 @@ function normalizePaths(root: string, path: string | undefined): string[] {
     .map(normalizePath)
 }
 
-function generateConfig(outputDir: string, options: Options) {
+function generateConfig(outputDir: string, options: Options): SVGSpriter.Config {
   return {
     dest: normalizePath(resolve(root, outputDir)),
     mode: {
@@ -85,6 +85,7 @@ function generateConfig(outputDir: string, options: Options) {
       transform: [
         {
           svgo: {
+            // @ts-expect-error [need to fix type for plugins property]
             plugins: [
               { name: 'preset-default' },
               {
@@ -119,8 +120,6 @@ async function generateSvgSprite(options: Required<Options>): Promise<string> {
     typeName,
     typeFileName,
   } = options
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-expect-error
   const spriter = new SVGSpriter(generateConfig(outputDir, options))
   const rootDir = icons.replace(/(\/(\*+))+\.(.+)/g, '')
   const entries = await FastGlob([icons])
@@ -216,7 +215,7 @@ function ViteSvgSpriteWrapper(options: Options = {}): PluginOption {
         },
       },
       config: () => ({ server: { watch: { disableGlobbing: false } } }),
-      configureServer({ watcher, ws }: ViteDevServer) {
+      configureServer({ watcher, hot }: ViteDevServer) {
         const iconsPath = normalizePaths(root, icons)
         const shouldReload = picomatch(iconsPath)
         const checkReload = (path: string) => {
@@ -224,7 +223,7 @@ function ViteSvgSpriteWrapper(options: Options = {}): PluginOption {
             schedule(() => {
               generateSvgSprite(resolved)
                 .then((res) => {
-                  ws.send({ type: 'full-reload', path: '*' })
+                  hot.send({ type: 'full-reload', path: '*' })
                   successGeneration(res)
                 })
                 .catch(failGeneration)
