@@ -154,6 +154,9 @@ async function generateSvgSprite(options: Required<Options>): Promise<string> {
     )
   }
 
+  if (!existsSync(outputDir))
+    mkdirSync(outputDir, { recursive: true })
+
   writeFileSync(
     result.symbol.sprite.path,
     result.symbol.sprite.contents.toString('utf8'),
