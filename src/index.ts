@@ -1,4 +1,4 @@
-import { dirname, resolve } from 'node:path'
+import { basename, dirname, resolve } from 'node:path'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { cwd } from 'node:process'
 import { type PluginOption, type ResolvedConfig, type ViteDevServer, normalizePath } from 'vite'
@@ -157,12 +157,14 @@ async function generateSvgSprite(options: Required<Options>): Promise<string> {
   if (!existsSync(outputDir))
     mkdirSync(outputDir, { recursive: true })
 
+  const sprite = result.symbol.sprite
+
   writeFileSync(
-    result.symbol.sprite.path,
-    result.symbol.sprite.contents.toString('utf8'),
+    sprite.path,
+    sprite.contents.toString(),
   )
 
-  return result.symbol.sprite.path.replace(`${root}/`, '')
+  return sprite.path.replace(`${root}/`, '')
 }
 
 function ViteSvgSpriteWrapper(options: Options = {}): PluginOption {
@@ -195,12 +197,21 @@ function ViteSvgSpriteWrapper(options: Options = {}): PluginOption {
         config = _config
       },
       enforce: 'pre',
-      buildStart: {
-        async handler() {
-          generateSvgSprite(resolved)
-            .then(successGeneration)
-            .catch(failGeneration)
-        },
+      async buildStart() {
+        await generateSvgSprite(resolved)
+          .then((path) => {
+            const name = basename(path)
+            const source = readFileSync(`${root}/${path}`)
+
+            this.emitFile({
+              name,
+              source,
+              type: 'asset',
+            })
+
+            successGeneration(path)
+          })
+          .catch(failGeneration)
       },
     },
     {
@@ -210,12 +221,10 @@ function ViteSvgSpriteWrapper(options: Options = {}): PluginOption {
         config = _config
       },
       enforce: 'pre',
-      buildStart: {
-        async handler() {
-          generateSvgSprite(resolved)
-            .then(successGeneration)
-            .catch(failGeneration)
-        },
+      async buildStart() {
+        await generateSvgSprite(resolved)
+          .then(successGeneration)
+          .catch(failGeneration)
       },
       config: () => ({ server: { watch: { disableGlobbing: false } } }),
       configureServer({ watcher, hot }: ViteDevServer) {

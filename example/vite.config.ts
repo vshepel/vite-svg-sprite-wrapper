@@ -5,7 +5,11 @@ export default defineConfig({
   plugins: [
     ViteSvgSpriteWrapper({
       icons: 'svg/*.svg',
-      outputDir: '',
+      outputDir: './public',
     }),
   ],
+  build: {
+    copyPublicDir: false,
+    manifest: true,
+  },
 })
