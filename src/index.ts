@@ -164,7 +164,7 @@ async function generateSvgSprite(options: Required<Options>): Promise<string> {
     sprite.contents.toString(),
   )
 
-  return sprite.path.replace(`${root}/`, '')
+  return sprite.path.replace(root, '')
 }
 
 function ViteSvgSpriteWrapper(options: Options = {}): PluginOption {
@@ -201,7 +201,7 @@ function ViteSvgSpriteWrapper(options: Options = {}): PluginOption {
         await generateSvgSprite(resolved)
           .then((path) => {
             const name = basename(path)
-            const source = readFileSync(`${root}/${path}`)
+            const source = readFileSync(`${root}${path}`)
 
             this.emitFile({
               name,
