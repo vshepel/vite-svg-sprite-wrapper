@@ -75,4 +75,40 @@ So you can use the icons somehow ([Example](https://github.com/vshepel/vite-svg-
 </svg>
 ```
 
-MIT License © 2023 [Volodymyr Shepel](https://github.com/vshepel)
+### Example of React Component:
+
+Config:
+
+```ts
+ViteSvgSpriteWrapper({
+  outputDir: 'public',
+  generateType: true,
+  typeName: 'IIcon',
+  typeFileName: 'Icon',
+  typeOutputDir: './src/type',
+})
+```
+
+Component:
+
+```tsx
+import type { IIcon } from './src/type/Icon'
+
+import sprite from '/sprite.svg'
+
+interface Props {
+  icon: IIcon
+}
+
+function Icon({ icon }: Props) {
+  return (
+    <svg class="icon" aria-hidden="true">
+      <use xlinkHref={`${sprite}#${icon}`}></use>
+    </svg>
+  )
+}
+
+export default Icon
+```
+
+MIT License © 2024 [Volodymyr Shepel](https://github.com/vshepel)
