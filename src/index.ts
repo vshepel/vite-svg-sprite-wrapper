@@ -1,11 +1,11 @@
-import { basename, dirname, resolve } from 'node:path'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { basename, dirname, resolve } from 'node:path'
 import { cwd } from 'node:process'
-import { type PluginOption, type ResolvedConfig, type ViteDevServer, normalizePath } from 'vite'
-import picomatch from 'picomatch'
-import colors from 'picocolors'
-import SVGSpriter from 'svg-sprite'
 import FastGlob from 'fast-glob'
+import colors from 'picocolors'
+import picomatch from 'picomatch'
+import SVGSpriter from 'svg-sprite'
+import { normalizePath, type PluginOption, type ResolvedConfig, type ViteDevServer } from 'vite'
 
 export interface Options {
   /**

@@ -8,7 +8,7 @@
   },
   "devDependencies": {
     "typescript": "^5",
-    "vite": "^5",
+    "vite": "^6",
     "vite-svg-sprite-wrapper": "workspace:*"
   }
 }
