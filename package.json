@@ -1,7 +1,7 @@
 {
   "name": "vite-svg-sprite-wrapper",
   "type": "module",
-  "version": "1.3.3",
+  "version": "1.4.0",
   "packageManager": "pnpm@8.15.5",
   "description": "Creating one sprite file on the fly",
   "author": "vshepel <web.shepel@gmail.com>",
