@@ -102,7 +102,7 @@ interface Props {
 
 function Icon({ icon }: Props) {
   return (
-    <svg class="icon" aria-hidden="true">
+    <svg className="icon" aria-hidden="true">
       <use xlinkHref={`${sprite}#${icon}`}></use>
     </svg>
   )
