@@ -231,7 +231,8 @@ function ViteSvgSpriteWrapper(options: Options = {}): PluginOption {
         const iconsPath = normalizePaths(root, icons)
         const shouldReload = picomatch(iconsPath)
         const checkReload = (path: string) => {
-          if (shouldReload(path)) {
+          const changedPath = normalizePath(path)
+          if (shouldReload(changedPath)) {
             schedule(() => {
               generateSvgSprite(resolved)
                 .then((res) => {
