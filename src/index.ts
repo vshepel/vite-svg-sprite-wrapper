@@ -2,8 +2,6 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { basename, dirname, resolve } from 'node:path'
 import { cwd } from 'node:process'
 import FastGlob from 'fast-glob'
-import colors from 'picocolors'
-import picomatch from 'picomatch'
 import SVGSpriter from 'svg-sprite'
 import { normalizePath, type PluginOption, type ResolvedConfig, type ViteDevServer } from 'vite'
 
@@ -211,12 +209,12 @@ function ViteSvgSpriteWrapper(options: Options = {}): PluginOption {
     timer = setTimeout(fn, 200) as any as number
   }
 
-  const formatConsole = (msg: string) => `${colors.cyan('[vite-plugin-svg-sprite]')} ${msg}`
+  const formatConsole = (msg: string) => `[vite-plugin-svg-sprite] ${msg}`
   const successGeneration = (res: string) => {
-    config.logger.info(formatConsole(`Sprite generated ${colors.green(res)}`))
+    config.logger.info(formatConsole(`Sprite generated: ${res}`))
   }
   const failGeneration = (err: any) => {
-    config.logger.info(formatConsole(`${colors.red('Sprite error')} ${colors.dim(err)}`))
+    config.logger.info(formatConsole(`🚨 Sprite error: ${err}`))
   }
 
   return [
@@ -259,10 +257,9 @@ function ViteSvgSpriteWrapper(options: Options = {}): PluginOption {
       config: () => ({ server: { watch: { disableGlobbing: false } } }),
       configureServer({ watcher, hot }: ViteDevServer) {
         const iconsPath = normalizePaths(root, icons)
-        const shouldReload = picomatch(iconsPath)
         const checkReload = (path: string) => {
           const changedPath = normalizePath(path)
-          if (shouldReload(changedPath)) {
+          if (FastGlob.globSync(iconsPath).includes(changedPath)) {
             schedule(() => {
               generateSvgSprite(resolved)
                 .then((res) => {
