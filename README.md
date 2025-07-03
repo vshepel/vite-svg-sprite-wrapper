@@ -41,6 +41,18 @@ export default defineConfig({
        */
       sprite?: SVGSpriter.Config
       /**
+       * Defines if the svg's fill should be normalized to currentColor
+       *
+       * @default true
+       */
+      spriteNormalizeFill?: boolean
+      /**
+       * Defines if the svg's stroke should be normalized to currentColor
+       *
+       * @default false
+       */
+      spriteNormalizeStroke?: boolean
+      /**
        * Defines if a type should be generated
        * @default false
        */

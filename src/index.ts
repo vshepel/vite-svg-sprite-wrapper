@@ -2,8 +2,6 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { basename, dirname, resolve } from 'node:path'
 import { cwd } from 'node:process'
 import FastGlob from 'fast-glob'
-import colors from 'picocolors'
-import picomatch from 'picomatch'
 import SVGSpriter from 'svg-sprite'
 import { normalizePath, type PluginOption, type ResolvedConfig, type ViteDevServer } from 'vite'
 
@@ -25,6 +23,18 @@ export interface Options {
    * sprite-svg {@link https://github.com/svg-sprite/svg-sprite/blob/main/docs/configuration.md#sprite-svg-options|options}
    */
   sprite?: SVGSpriter.Config
+  /**
+   * Defines if the svg's fill should be normalized to currentColor
+   *
+   * @default true
+   */
+  spriteNormalizeFill?: boolean
+  /**
+   * Defines if the svg's stroke should be normalized to currentColor
+   *
+   * @default false
+   */
+  spriteNormalizeStroke?: boolean
   /**
    * Defines if a type should be generated
    * @default false
@@ -51,6 +61,8 @@ export const defaultOptions: Required<Options> = {
   icons: 'src/assets/images/svg/*.svg',
   outputDir: 'src/public/images',
   sprite: {},
+  spriteNormalizeFill: true,
+  spriteNormalizeStroke: false,
   generateType: false,
   typeName: 'SvgIcons',
   typeFileName: 'svg-icons',
@@ -71,6 +83,39 @@ function normalizePaths(root: string, path: string | undefined): string[] {
 }
 
 function generateConfig(outputDir: string, options: Options): SVGSpriter.Config {
+  const svgoPlugins = [
+    { name: 'preset-default' },
+    {
+      name: 'removeAttrs',
+      params: {
+        attrs: [`*:(data-*|style${options.spriteNormalizeFill ? '|fill' : ''}${options.spriteNormalizeStroke ? '|stroke' : ''}):*`],
+      },
+    },
+    'removeXMLNS',
+  ]
+
+  if (options.spriteNormalizeFill) {
+    svgoPlugins.push({
+      name: 'addAttributesToSVGElement',
+      params: {
+        // @ts-expect-error [need to fix type for plugins property]
+        attributes: [
+          { fill: 'currentColor' },
+        ],
+      },
+    })
+  }
+  if (options.spriteNormalizeStroke) {
+    svgoPlugins.push({
+      name: 'addAttributesToSVGElement',
+      params: {
+        // @ts-expect-error [need to fix type for plugins property]
+        attributes: [
+          { stroke: 'currentColor' },
+        ],
+      },
+    })
+  }
   return {
     dest: normalizePath(resolve(root, outputDir)),
     mode: {
@@ -86,24 +131,7 @@ function generateConfig(outputDir: string, options: Options): SVGSpriter.Config 
         {
           svgo: {
             // @ts-expect-error [need to fix type for plugins property]
-            plugins: [
-              { name: 'preset-default' },
-              {
-                name: 'removeAttrs',
-                params: {
-                  attrs: ['*:(data-*|style|fill):*'],
-                },
-              },
-              {
-                name: 'addAttributesToSVGElement',
-                params: {
-                  attributes: [
-                    { fill: 'currentColor' },
-                  ],
-                },
-              },
-              'removeXMLNS',
-            ],
+            plugins: svgoPlugins,
           },
         },
       ],
@@ -181,12 +209,12 @@ function ViteSvgSpriteWrapper(options: Options = {}): PluginOption {
     timer = setTimeout(fn, 200) as any as number
   }
 
-  const formatConsole = (msg: string) => `${colors.cyan('[vite-plugin-svg-sprite]')} ${msg}`
+  const formatConsole = (msg: string) => `[vite-plugin-svg-sprite] ${msg}`
   const successGeneration = (res: string) => {
-    config.logger.info(formatConsole(`Sprite generated ${colors.green(res)}`))
+    config.logger.info(formatConsole(`Sprite generated: ${res}`))
   }
   const failGeneration = (err: any) => {
-    config.logger.info(formatConsole(`${colors.red('Sprite error')} ${colors.dim(err)}`))
+    config.logger.info(formatConsole(`🚨 Sprite error: ${err}`))
   }
 
   return [
@@ -229,9 +257,9 @@ function ViteSvgSpriteWrapper(options: Options = {}): PluginOption {
       config: () => ({ server: { watch: { disableGlobbing: false } } }),
       configureServer({ watcher, hot }: ViteDevServer) {
         const iconsPath = normalizePaths(root, icons)
-        const shouldReload = picomatch(iconsPath)
         const checkReload = (path: string) => {
-          if (shouldReload(path)) {
+          const changedPath = normalizePath(path)
+          if (FastGlob.globSync(iconsPath).includes(changedPath)) {
             schedule(() => {
               generateSvgSprite(resolved)
                 .then((res) => {

@@ -1,61 +1,57 @@
 {
-  "name": "vite-svg-sprite-wrapper",
-  "type": "module",
-  "version": "1.4.1",
-  "packageManager": "pnpm@8.15.5",
-  "description": "Creating one sprite file on the fly",
-  "author": "vshepel <web.shepel@gmail.com>",
-  "license": "MIT",
-  "homepage": "https://github.com/vshepel/vite-svg-sprite-wrapper",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/vshepel/vite-svg-sprite-wrapper"
-  },
-  "bugs": "https://github.com/vshepel/vite-svg-sprite-wrapper/issues",
-  "keywords": [
-    "vite",
-    "vite-plugin",
-    "svg",
-    "svg-sprite"
-  ],
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+    "name": "vite-svg-sprite-wrapper",
+    "type": "module",
+    "version": "1.4.2",
+    "packageManager": "pnpm@8.15.5",
+    "description": "Creating one sprite file on the fly",
+    "author": "vshepel <web.shepel@gmail.com>",
+    "license": "MIT",
+    "homepage": "https://github.com/vshepel/vite-svg-sprite-wrapper",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/vshepel/vite-svg-sprite-wrapper"
+    },
+    "bugs": "https://github.com/vshepel/vite-svg-sprite-wrapper/issues",
+    "keywords": [
+        "vite",
+        "vite-plugin",
+        "svg",
+        "svg-sprite"
+    ],
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "require": "./dist/index.cjs"
+        }
+    },
+    "main": "dist/index.js",
+    "module": "dist/index.mjs",
+    "types": "dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "tsup src/index.ts --dts --format cjs,esm --clean",
+        "dev": "pnpm run build --watch",
+        "lint": "eslint .",
+        "prepublishOnly": "pnpm run build",
+        "release": "npm version patch && npm publish"
+    },
+    "peerDependencies": {
+        "vite": "^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0"
+    },
+    "dependencies": {
+        "fast-glob": "^3.3.2",
+        "svg-sprite": "^2.0.4"
+    },
+    "devDependencies": {
+        "@antfu/eslint-config": "^4.16.2",
+        "@types/node": "^20.17.9",
+        "@types/svg-sprite": "^0.0.39",
+        "eslint": "^9.15.0",
+        "tsup": "^8.3.5",
+        "typescript": "^5.7.2",
+        "vite": "^7.0.1"
     }
-  },
-  "main": "dist/index.js",
-  "module": "dist/index.mjs",
-  "types": "dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
-  "scripts": {
-    "build": "tsup src/index.ts --dts --format cjs,esm --clean",
-    "dev": "pnpm run build --watch",
-    "lint": "eslint .",
-    "prepublishOnly": "pnpm run build",
-    "release": "bumpp && npm publish"
-  },
-  "peerDependencies": {
-    "vite": "^4.0.0 || ^5.0.0 || ^6.0.0"
-  },
-  "dependencies": {
-    "fast-glob": "^3.3.2",
-    "picocolors": "^1.1.1",
-    "picomatch": "^4.0.2",
-    "svg-sprite": "^2.0.4"
-  },
-  "devDependencies": {
-    "@antfu/eslint-config": "^3.11.2",
-    "@types/node": "^20.17.9",
-    "@types/picomatch": "^3.0.1",
-    "@types/svg-sprite": "^0.0.39",
-    "bumpp": "^9.8.1",
-    "eslint": "^9.15.0",
-    "tsup": "^8.3.5",
-    "typescript": "^5.7.2",
-    "vite": "^6.0.1"
-  }
 }
