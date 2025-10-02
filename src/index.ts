@@ -27,6 +27,18 @@ export interface Options {
    */
   sprite?: SVGSpriter.Config
   /**
+   * Defines if the svg's fill should be normalized to currentColor
+   *
+   * @default true
+   */
+  spriteNormalizeFill?: boolean
+  /**
+   * Defines if the svg's stroke should be normalized to currentColor
+   *
+   * @default false
+   */
+  spriteNormalizeStroke?: boolean
+  /**
    * Defines if a type should be generated
    * @default false
    */
@@ -52,6 +64,8 @@ export const defaultOptions: Required<Options> = {
   icons: 'src/assets/images/svg/*.svg',
   outputDir: 'src/public/images',
   sprite: {},
+  spriteNormalizeFill: true,
+  spriteNormalizeStroke: false,
   generateType: false,
   typeName: 'SvgIcons',
   typeFileName: 'svg-icons',
@@ -72,6 +86,40 @@ function normalizePaths(root: string, path: string | undefined): string[] {
 }
 
 function generateConfig(outputDir: string, options: Options): SVGSpriter.Config {
+  const svgoPlugins = [
+    { name: 'preset-default' },
+    {
+      name: 'removeAttrs',
+      params: {
+        attrs: [`*:(data-*|style${options.spriteNormalizeFill ? '|fill' : ''}${options.spriteNormalizeStroke ? '|stroke' : ''}):*`],
+      },
+    },
+    'removeXMLNS',
+  ]
+
+  if (options.spriteNormalizeFill) {
+    svgoPlugins.push({
+      name: 'addAttributesToSVGElement',
+      params: {
+        // @ts-expect-error [need to fix type for plugins property]
+        attributes: [
+          { fill: 'currentColor' },
+        ],
+      },
+    })
+  }
+  if (options.spriteNormalizeStroke) {
+    svgoPlugins.push({
+      name: 'addAttributesToSVGElement',
+      params: {
+        // @ts-expect-error [need to fix type for plugins property]
+        attributes: [
+          { stroke: 'currentColor' },
+        ],
+      },
+    })
+  }
+
   return {
     dest: normalizePath(resolve(root, outputDir)),
     mode: {
@@ -87,24 +135,7 @@ function generateConfig(outputDir: string, options: Options): SVGSpriter.Config 
         {
           svgo: {
             // @ts-expect-error [need to fix type for plugins property]
-            plugins: [
-              { name: 'preset-default' },
-              {
-                name: 'removeAttrs',
-                params: {
-                  attrs: ['*:(data-*|style|fill):*'],
-                },
-              },
-              {
-                name: 'addAttributesToSVGElement',
-                params: {
-                  attributes: [
-                    { fill: 'currentColor' },
-                  ],
-                },
-              },
-              'removeXMLNS',
-            ],
+            plugins: svgoPlugins,
           },
         },
       ],
