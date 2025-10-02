@@ -1,3 +1,4 @@
+import type { PluginOption, ResolvedConfig, ViteDevServer } from 'vite'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { basename, dirname, resolve } from 'node:path'
 import { cwd } from 'node:process'
@@ -5,7 +6,7 @@ import FastGlob from 'fast-glob'
 import colors from 'picocolors'
 import picomatch from 'picomatch'
 import SVGSpriter from 'svg-sprite'
-import { normalizePath, type PluginOption, type ResolvedConfig, type ViteDevServer } from 'vite'
+import { normalizePath } from 'vite'
 
 export interface Options {
   /**

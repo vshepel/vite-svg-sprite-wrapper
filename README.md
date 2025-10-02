@@ -111,4 +111,4 @@ function Icon({ icon }: Props) {
 export default Icon
 ```
 
-MIT License © 2024 [Volodymyr Shepel](https://github.com/vshepel)
+MIT License © 2025 [Volodymyr Shepel](https://github.com/vshepel)

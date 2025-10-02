@@ -2,7 +2,7 @@
   "name": "vite-svg-sprite-wrapper",
   "type": "module",
   "version": "1.4.1",
-  "packageManager": "pnpm@8.15.5",
+  "packageManager": "pnpm@10.18.0",
   "description": "Creating one sprite file on the fly",
   "author": "vshepel <web.shepel@gmail.com>",
   "license": "MIT",
@@ -39,23 +39,23 @@
     "release": "bumpp && npm publish"
   },
   "peerDependencies": {
-    "vite": "^4.0.0 || ^5.0.0 || ^6.0.0"
+    "vite": "^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0"
   },
   "dependencies": {
-    "fast-glob": "^3.3.2",
+    "fast-glob": "^3.3.3",
     "picocolors": "^1.1.1",
-    "picomatch": "^4.0.2",
+    "picomatch": "^4.0.3",
     "svg-sprite": "^2.0.4"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^3.11.2",
-    "@types/node": "^20.17.9",
-    "@types/picomatch": "^3.0.1",
+    "@antfu/eslint-config": "^5.4.1",
+    "@types/node": "^24.6.2",
+    "@types/picomatch": "^4.0.2",
     "@types/svg-sprite": "^0.0.39",
-    "bumpp": "^9.8.1",
-    "eslint": "^9.15.0",
-    "tsup": "^8.3.5",
-    "typescript": "^5.7.2",
-    "vite": "^6.0.1"
+    "bumpp": "^10.2.3",
+    "eslint": "^9.36.0",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.8"
   }
 }
